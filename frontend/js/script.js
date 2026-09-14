@@ -2421,9 +2421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         el.btnActivateAlarm.addEventListener('click', async () => {
             const res = await apiRequest('/security/alarm/activate', 'POST', { method: 'Manual Control' });
             if (res && res.success) {
-                state.sirenActive = true;
-                audio.startAlarmSiren(3500);
-                showToast(res.message, 'warning');
+                audio.playSuccess();
+                showToast('Security Alarm System ARMED — Monitoring for intrusions.', 'info');
                 await loadDashboard();
             } else if (res) {
                 showToast(res.message || 'Failed to activate alarm.', 'error');
@@ -2438,7 +2437,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
             const res = await apiRequest('/security/alarm/deactivate', 'POST', { method: 'Manual Control' });
             if (res && res.success) {
-                showToast(res.message, 'info');
+                audio.playKeyClick();
+                showToast('Security Alarm System DISARMED.', 'info');
                 await loadDashboard();
             } else if (res) {
                 showToast(res.message || 'Failed to deactivate alarm.', 'error');
