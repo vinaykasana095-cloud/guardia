@@ -123,16 +123,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (e) {}
         }
 
-        startAlarmSiren() {
+        startAlarmSiren(duration = 4000) {
             this.init();
-            if (!this.ctx || this.alarmOsc) return;
+            if (!this.ctx) return;
+            this.stopAlarmSiren();
             try {
                 this.alarmOsc = this.ctx.createOscillator();
                 this.alarmGain = this.ctx.createGain();
 
-                this.alarmOsc.type = 'sawtooth';
-                this.alarmOsc.frequency.setValueAtTime(700, this.ctx.currentTime);
-                this.alarmGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                this.alarmOsc.type = 'sine';
+                this.alarmOsc.frequency.setValueAtTime(650, this.ctx.currentTime);
+                this.alarmGain.gain.setValueAtTime(0.12, this.ctx.currentTime);
 
                 this.alarmOsc.connect(this.alarmGain);
                 this.alarmGain.connect(this.ctx.destination);
@@ -141,11 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 let high = true;
                 this.alarmInterval = setInterval(() => {
                     if (this.alarmOsc && this.ctx) {
-                        const freq = high ? 950 : 650;
+                        const freq = high ? 850 : 580;
                         this.alarmOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.08);
                         high = !high;
                     }
-                }, 250);
+                }, 280);
+
+                if (duration > 0) {
+                    this.alarmTimeout = setTimeout(() => {
+                        this.stopAlarmSiren();
+                    }, duration);
+                }
             } catch (e) {}
         }
 
@@ -153,6 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.alarmInterval) {
                 clearInterval(this.alarmInterval);
                 this.alarmInterval = null;
+            }
+            if (this.alarmTimeout) {
+                clearTimeout(this.alarmTimeout);
+                this.alarmTimeout = null;
+            }
+            if (this.alarmGain && this.ctx) {
+                try {
+                    this.alarmGain.gain.setValueAtTime(0, this.ctx.currentTime);
+                    this.alarmGain.disconnect();
+                } catch (e) {}
+                this.alarmGain = null;
             }
             if (this.alarmOsc) {
                 try {
@@ -737,10 +755,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (el.appAlarmState) el.appAlarmState.textContent = 'ARMED';
         } else {
-            // Disarmed state: stop siren audio & hide overlay
-            state.sirenActive = false;
-            audio.stopAlarmSiren();
-            if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
+            // Disarmed state
+            if (door.security_mode !== 'EMERGENCY' && !state.sirenActive) {
+                state.sirenActive = false;
+                audio.stopAlarmSiren();
+                if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
+            }
 
             if (el.statusHealthText) {
                 el.statusHealthText.textContent = 'OFF';
@@ -749,10 +769,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el.appAlarmState) el.appAlarmState.textContent = 'OFF';
         }
 
-        // Trigger Siren audio & red flashing overlay ONLY if Emergency Mode is active or an intruder lockout occurred
+        // Show visual alarm/emergency overlay without infinite restart of audio on background polls
         if (door.security_mode === 'EMERGENCY' || state.sirenActive) {
-            audio.startAlarmSiren();
             if (el.alarmOverlay) el.alarmOverlay.classList.remove('hidden');
+        } else {
+            if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
         }
 
         // --- System Controls Grid 1: Alarm System ---
@@ -1369,54 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.btnClose) el.btnClose.addEventListener('click', executeCloseAction);
     if (el.btnLock) el.btnLock.addEventListener('click', executeLockAction);
 
-    // ==========================================================================
-    // 9. SECURITY SWITCHES & CONTROLS
-    // ==========================================================================
-    const handleAlarmToggle = async () => {
-        state.sirenActive = false;
-        audio.stopAlarmSiren();
-        if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
 
-        const res = await apiRequest('/security/alarm', 'POST');
-        if (res && res.success) {
-            const toastMsg = res.alarmStatus === 1 
-                ? 'Security Alarm System ARMED — Monitoring for intrusions.' 
-                : 'Security Alarm System DISARMED & Siren Muted.';
-            showToast(toastMsg, 'info');
-        }
-        loadDashboard();
-    };
-    if (el.btnToggleAlarm) el.btnToggleAlarm.addEventListener('click', handleAlarmToggle);
-    if (el.btnActivateAlarm) el.btnActivateAlarm.addEventListener('click', handleAlarmToggle);
-    if (el.btnDeactivateAlarm) el.btnDeactivateAlarm.addEventListener('click', handleAlarmToggle);
-    if (el.btnSilenceAlarm) el.btnSilenceAlarm.addEventListener('click', handleAlarmToggle);
-
-    const handleEmergencyToggle = async () => {
-        const res = await apiRequest('/security/emergency', 'POST');
-        if (res && res.success) showToast(res.message, 'info');
-        loadDashboard();
-    };
-    if (el.btnToggleEmergency) el.btnToggleEmergency.addEventListener('click', handleEmergencyToggle);
-    if (el.btnActivateEmergency) el.btnActivateEmergency.addEventListener('click', handleEmergencyToggle);
-    if (el.btnExitEmergency) el.btnExitEmergency.addEventListener('click', handleEmergencyToggle);
-
-    const handlePrivacyToggle = async () => {
-        const res = await apiRequest('/security/privacy', 'POST');
-        if (res && res.success) showToast(res.message, 'info');
-        loadDashboard();
-    };
-    if (el.btnTogglePrivacy) el.btnTogglePrivacy.addEventListener('click', handlePrivacyToggle);
-    if (el.btnEnablePrivacy) el.btnEnablePrivacy.addEventListener('click', handlePrivacyToggle);
-    if (el.btnDisablePrivacy) el.btnDisablePrivacy.addEventListener('click', handlePrivacyToggle);
-
-    const handlePowerToggle = async () => {
-        const res = await apiRequest('/security/power-backup', 'POST');
-        if (res && res.success) showToast(res.message, 'info');
-        loadDashboard();
-    };
-    if (el.btnTogglePower) el.btnTogglePower.addEventListener('click', handlePowerToggle);
-    if (el.btnSimulatePowerFail) el.btnSimulatePowerFail.addEventListener('click', handlePowerToggle);
-    if (el.btnRestorePower) el.btnRestorePower.addEventListener('click', handlePowerToggle);
 
     // --- AUDIT HISTORY FILTERS & EXPORT ---
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -2447,6 +2421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         el.btnActivateAlarm.addEventListener('click', async () => {
             const res = await apiRequest('/security/alarm/activate', 'POST', { method: 'Manual Control' });
             if (res && res.success) {
+                state.sirenActive = true;
+                audio.startAlarmSiren(3500);
                 showToast(res.message, 'warning');
                 await loadDashboard();
             } else if (res) {
@@ -2457,6 +2433,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (el.btnDeactivateAlarm) {
         el.btnDeactivateAlarm.addEventListener('click', async () => {
+            state.sirenActive = false;
+            audio.stopAlarmSiren();
+            if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
             const res = await apiRequest('/security/alarm/deactivate', 'POST', { method: 'Manual Control' });
             if (res && res.success) {
                 showToast(res.message, 'info');
@@ -2469,13 +2448,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (el.btnSilenceAlarm) {
         el.btnSilenceAlarm.addEventListener('click', async () => {
-            const res = await apiRequest('/security/alarm/deactivate', 'POST', { method: 'Manual Control' });
-            if (res && res.success) {
-                showToast('Alarm Silenced', 'info');
-                await loadDashboard();
-            } else if (res) {
-                showToast(res.message || 'Failed to silence alarm.', 'error');
+            state.sirenActive = false;
+            audio.stopAlarmSiren();
+            if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
+            await apiRequest('/security/alarm/deactivate', 'POST', { method: 'Manual Control' });
+            if (state.securityMode === 'EMERGENCY') {
+                await apiRequest('/security/emergency/deactivate', 'POST');
             }
+            showToast('Alarm silenced and reset to normal', 'info');
+            await loadDashboard();
         });
     }
 
@@ -2483,6 +2464,8 @@ document.addEventListener('DOMContentLoaded', () => {
         el.btnActivateEmergency.addEventListener('click', async () => {
             const res = await apiRequest('/security/emergency/activate', 'POST');
             if (res && res.success) {
+                state.sirenActive = true;
+                audio.startAlarmSiren(3500);
                 showToast(res.message, 'error');
                 await loadDashboard();
             } else if (res) {
@@ -2493,6 +2476,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (el.btnExitEmergency) {
         el.btnExitEmergency.addEventListener('click', async () => {
+            state.sirenActive = false;
+            audio.stopAlarmSiren();
+            if (el.alarmOverlay) el.alarmOverlay.classList.add('hidden');
             const res = await apiRequest('/security/emergency/deactivate', 'POST');
             if (res && res.success) {
                 showToast(res.message, 'info');
