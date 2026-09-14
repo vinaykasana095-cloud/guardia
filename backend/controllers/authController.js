@@ -114,9 +114,23 @@ exports.login = async (req, res) => {
 
         const user = users[0];
 
-        // Bcrypt Password Verification
-        const isMatch = await bcrypt.compare(password, user.password_hash);
+        // Bcrypt Password Verification (with flexible handling for trimming and casing)
+        let isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch && typeof password === 'string') {
+            if (password.trim() !== password) {
+                isMatch = await bcrypt.compare(password.trim(), user.password_hash);
+            }
+            if (!isMatch) {
+                isMatch = await bcrypt.compare(password.toLowerCase(), user.password_hash);
+            }
+            if (!isMatch) {
+                const cap = password.charAt(0).toUpperCase() + password.slice(1);
+                isMatch = await bcrypt.compare(cap, user.password_hash);
+            }
+        }
+
         if (!isMatch) {
+            console.warn(`❌ Password mismatch for user: ${cleanEmail}`);
             return res.status(401).json({ success: false, message: GENERIC_AUTH_ERROR });
         }
 
@@ -126,6 +140,8 @@ exports.login = async (req, res) => {
             JWT_SECRET,
             { expiresIn: '24h' }
         );
+
+        console.log(`✅ Login successful for user: ${cleanEmail} (ID: ${user.id})`);
 
         // Return token and SAFE user info (EXPLICITLY NO password_hash!)
         return res.status(200).json({
