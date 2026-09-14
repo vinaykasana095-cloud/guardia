@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUARDIA — Smart Security System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Toast Notification Banner Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- MANAGE SECURITY PIN MODAL -->
+    <div id="pin-modal-overlay" class="auth-modal-overlay hidden">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-shield-mini">🔑</div>
+                <h2>MANAGE SECURITY PIN</h2>
+                <p>Set or update your 4 or 6 digit door access PIN</p>
+            </div>
+
+            <div id="pin-modal-error" class="auth-error-msg hidden"></div>
+
+            <form id="form-manage-pin" class="auth-form active">
+                <div class="input-group">
+                    <label for="pin-current">Current PIN (Optional if setting first PIN)</label>
+                    <input type="password" id="pin-current" placeholder="••••" maxlength="6">
+                </div>
+
+                <div class="input-group">
+                    <label for="pin-new">New PIN (4 or 6 digits) <span class="req">*</span></label>
+                    <input type="password" id="pin-new" required placeholder="••••" maxlength="6">
+                </div>
+
+                <div class="input-group">
+                    <label for="pin-confirm-new">Confirm New PIN <span class="req">*</span></label>
+                    <input type="password" id="pin-confirm-new" required placeholder="••••" maxlength="6">
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" id="btn-close-pin-modal" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="btn-submit-manage-pin" class="btn btn-primary">Save Security PIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MANAGE RFID CARDS MODAL -->
+    <div id="rfid-modal-overlay" class="auth-modal-overlay hidden">
+        <div class="auth-card" style="max-width: 520px;">
+            <div class="auth-header">
+                <div class="logo-shield-mini">🪪</div>
+                <h2>MANAGE AUTHORIZED RFID CARDS</h2>
+                <p>Register or revoke smart RFID access pass credentials</p>
+            </div>
+
+            <div id="rfid-modal-error" class="auth-error-msg hidden"></div>
+
+            <div class="rfid-cards-list-box" id="rfid-cards-list-box">
+                <!-- Dynamically populated by JS API call -->
+            </div>
+
+            <form id="form-add-rfid-card" class="auth-form active" style="margin-top: 16px;">
+                <div class="input-group">
+                    <label for="rfid-card-name">Card Label / Name <span class="req">*</span></label>
+                    <input type="text" id="rfid-card-name" required placeholder="e.g. Master Office Key">
+                </div>
+
+                <div class="input-group">
+                    <label for="rfid-card-id">Simulated Card Code <span class="req">*</span></label>
+                    <input type="text" id="rfid-card-id" required placeholder="CARD-xxxx-xxxx" value="CARD-7733-PASS">
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" id="btn-close-rfid-modal" class="btn btn-secondary">Close</button>
+                    <button type="submit" id="btn-submit-add-rfid" class="btn btn-primary">+ Add RFID Pass</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VOICE COMMAND SIMULATION MODAL -->
+    <div id="voice-modal-overlay" class="auth-modal-overlay hidden">
+        <div class="auth-card" style="max-width: 520px;">
+            <div class="auth-header">
+                <div class="logo-shield-mini">🎙️</div>
+                <h2>SIMULATE VOICE COMMAND</h2>
+                <p>Select a preset supported command or type a custom spoken sentence</p>
+            </div>
+
+            <div class="auth-form active" style="margin-top: 12px;">
+                <div class="input-group">
+                    <label for="voice-preset-select">Select Supported Voice Command:</label>
+                    <select id="voice-preset-select" class="select-input" style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(15, 17, 26, 0.9); color: #fff; border: 1px solid var(--border-color);">
+                        <option value="unlock door">"Unlock door" (or "Please unlock the door")</option>
+                        <option value="lock door">"Lock door" (or "Lock main door")</option>
+                        <option value="open door">"Open door" (or "Open my door")</option>
+                        <option value="close door">"Close door" (or "Close the door")</option>
+                        <option value="activate alarm">"Activate alarm" (or "Turn on alarm")</option>
+                        <option value="deactivate alarm">"Deactivate alarm" (or "Silence alarm")</option>
+                        <option value="enable privacy mode">"Enable privacy mode"</option>
+                        <option value="disable privacy mode">"Disable privacy mode"</option>
+                        <option value="tell me how to unlock the door">"Tell me how to unlock the door" (Informational Query)</option>
+                        <option value="what is the weather today">"What is the weather today?" (Unrecognized Command)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="voice-custom-input">Or Type Custom Spoken Sentence:</label>
+                    <input type="text" id="voice-custom-input" placeholder="e.g. Please unlock the main door">
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" id="btn-close-voice-modal" class="btn btn-secondary">Cancel</button>
+                    <button type="button" id="btn-submit-voice-sim" class="btn btn-primary">🚀 Execute Command</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION OVERLAY SCREEN -->
+    <div id="auth-modal-overlay" class="auth-modal-overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-shield-mini">🛡️</div>
+                <h2>GUARDIA SECURITY</h2>
+                <p id="auth-subtext">Access your luxury smart security control dashboard</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab-btn active">LOGIN</button>
+                <button id="tab-register" class="auth-tab-btn">CREATE ACCOUNT</button>
+            </div>
+
+            <!-- Error Banners -->
+            <div id="auth-error-msg" class="auth-error-msg hidden"></div>
+
+            <!-- LOGIN FORM -->
+            <form id="form-login" class="auth-form active">
+                <div class="input-group">
+                    <label for="login-email">Email Address <span class="req">*</span></label>
+                    <input type="email" id="login-email" required placeholder="alex@guardia.com" value="">
+                </div>
+
+                <div class="input-group">
+                    <label for="login-password">Password <span class="req">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="login-password" required placeholder="••••••••" value="">
+                        <button type="button" id="btn-toggle-login-pass" class="btn-eye-toggle" title="Show/Hide Password">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary full-width" id="btn-login-submit">
+                    <span class="btn-text">ACCESS GUARDIA DASHBOARD</span>
+                    <span class="btn-spinner hidden">⏳ Logging in...</span>
+                </button>
+                
+                <div class="auth-footer-link">
+                    <span>New to Guardia?</span>
+                    <button type="button" id="btn-goto-register" class="btn-link">Create an Account</button>
+                </div>
+
+                <p class="auth-hint">💡 Demo Credentials: <strong>alex@guardia.com</strong> / <strong>password123</strong></p>
+            </form>
+
+            <!-- REGISTRATION FORM -->
+            <form id="form-register" class="auth-form">
+                <div class="input-group">
+                    <label for="reg-name">Full Name <span class="req">*</span></label>
+                    <input type="text" id="reg-name" required placeholder="Alok Mercer">
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-email">Email Address <span class="req">*</span></label>
+                    <input type="email" id="reg-email" required placeholder="alok@example.com">
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-password">Password (min 6 characters) <span class="req">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="reg-password" required placeholder="••••••••">
+                        <button type="button" id="btn-toggle-reg-pass" class="btn-eye-toggle" title="Show/Hide Password">👁️</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-confirm-password">Confirm Password <span class="req">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="reg-confirm-password" required placeholder="••••••••">
+                        <button type="button" id="btn-toggle-reg-confirm" class="btn-eye-toggle" title="Show/Hide Password">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary full-width" id="btn-register-submit">
+                    <span class="btn-text">CREATE SECURE ACCOUNT</span>
+                    <span class="btn-spinner hidden">⏳ Registering...</span>
+                </button>
+
+                <div class="auth-footer-link">
+                    <span>Already have an account?</span>
+                    <button type="button" id="btn-goto-login" class="btn-link">Back to Login</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Emergency Flashing Alarm Overlay -->
+    <div id="alarm-overlay" class="alarm-overlay hidden">
+        <div class="alarm-banner">
+            <div class="alarm-icon-pulse">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h2>SECURITY ALERT — ALARM TRIGGERED</h2>
+            <p id="alarm-cause-text">Unauthorized Access Attempt Threshold Exceeded</p>
+            <button id="btn-silence-alarm" class="btn btn-alarm-clear">MUTE & RESET ALARM</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-layout">
+        
+        <!-- TOP LUXURY NAVBAR (Matching Mockup Image) -->
+        <header class="luxury-navbar">
+            <div class="nav-brand">
+                <div class="logo-shield">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <circle cx="12" cy="11" r="3"/>
+                        <path d="M12 14v3"/>
+                    </svg>
+                </div>
+                <span class="brand-text">GUARDIA</span>
+            </div>
+
+            <!-- Upper Navigation Links matching screenshot -->
+            <nav class="sidebar-nav nav-links">
+                <button class="nav-item active" data-view="view-dashboard" data-title="Next-Gen Door Intelligence" data-icon="📊" data-subtext="Real-time smart security door status and visual controls" id="nav-dashboard">FEATURES</button>
+                <button class="nav-item" data-view="view-access-methods" data-title="Access Methods Center" data-icon="🔑" data-subtext="Multi-factor door entry methods: PIN, Fingerprint, RFID, Mobile & Voice" id="nav-access-methods">HOW IT WORKS</button>
+                <button class="nav-item" data-view="view-security-controls" data-title="Security & Safety Hub" data-icon="🚨" data-subtext="Alarm system, Emergency overrides, Privacy mode & Backup power" id="nav-security-controls">SAFETY</button>
+                <button class="nav-item" data-view="view-history" data-title="Audit Logs & Access History" data-icon="📜" data-subtext="Real-time audit records stored in MySQL access_logs table" id="nav-history">AUDIT LOGS</button>
+                <button class="nav-item" data-view="view-contact" data-title="Contact Us & Support Hub" data-icon="📧" data-subtext="Get in touch with GUARDIA security specialists and support team" id="nav-contact">CONTACT</button>
+            </nav>
+
+            <!-- Navbar Actions & Settings Gear -->
+            <div class="nav-actions">
+                <div class="user-pill" id="user-profile-pill">
+                    <div class="user-avatar-circle" id="user-avatar-initials">U</div>
+                    <span class="welcome-text">Welcome, <strong id="user-display-name">User</strong></span>
+                    <button id="btn-logout" class="btn-logout-mini" title="Logout of Session">Logout</button>
+                </div>
+
+                <button class="btn-gear-circle" id="btn-top-settings-gear" title="Settings & Configuration">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN PAGE BODY CONTENT -->
+        <main class="page-content">
+
+            <!-- HERO SECTION (Matching Mockup Image Layout) -->
+            <section class="hero-section">
+                <!-- HERO LEFT COLUMN: Headline & CTA -->
+                <div class="hero-left">
+                    <h1 class="hero-headline">Next-Gen Door Intelligence</h1>
+                    
+                    <p class="hero-description">
+                        Guardia replaces conventional keys with a military-grade authentication stack. Seamlessly combining automatic locking motors, 360° biometric sensors, intrusion sirens, and emergency voice guidance into an ultra-luxury physical door.
+                    </p>
+
+                    <div class="hero-cta-wrapper">
+                        <button id="btn-hero-cta" class="btn btn-hero-gold">
+                            SEE HOW IT WORKS <span class="arrow-icon">→</span>
+                        </button>
+                    </div>
+
+                    <!-- Live System Status Indicators Pill Bar -->
+                    <div class="hero-status-strip">
+                        <div class="status-pill" id="header-conn-pill">
+                            <span class="status-dot green" id="conn-dot"></span>
+                            <span class="pill-label">SYSTEM:</span>
+                            <span class="pill-val" id="val-conn-status">ONLINE</span>
+                        </div>
+                        <div class="status-pill" id="header-power-pill">
+                            <span class="status-dot green"></span>
+                            <span class="pill-label">POWER:</span>
+                            <span class="pill-val" id="val-power-source">MAIN POWER</span>
+                            <span id="status-battery-text" class="hidden">MAIN POWER</span>
+                        </div>
+                        <div class="status-pill" id="header-mode-pill">
+                            <span class="status-dot blue"></span>
+                            <span class="pill-label">MODE:</span>
+                            <span class="pill-val" id="val-sec-mode">NORMAL</span>
+                            <span id="status-security-level" class="hidden">NORMAL</span>
+                            <span id="status-health-text" class="hidden">OFF</span>
+                        </div>
+                        <div class="time-widget">
+                            <span class="time-clock" id="clock-display">00:00:00 AM</span>
+                            <span class="date-display" id="date-display">Sep 14, 2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HERO RIGHT COLUMN: Interactive Ultra-Luxury Door Card (photorealistic render) -->
+                <div class="hero-right">
+                    <div class="photoreal-door-card">
+                        
+                        <!-- Door Render Canvas Container -->
+                        <div class="door-frame" id="door-frame">
+                            <div class="frame-led-bar" id="frame-led-bar"></div>
+
+                            <div class="interior-room-bg">
+                                <div class="security-camera-light"></div>
+                                <span class="interior-welcome">WELCOME INSIDE</span>
+                            </div>
+
+                            <!-- Photorealistic Door Gate Panel with 3D Hinge Animation -->
+                            <div class="door-leaf locked" id="door-leaf">
+                                <img src="images/door_leaf_panel.png" alt="Guardia Smart Door Leaf Panel" class="door-render-img">
+
+                                <!-- Real-Time Dynamic Status Text Overlay over Rendered Panel -->
+                                <div class="smart-panel-display-overlay">
+                                    <div class="panel-status-text" id="status-door-text">LOCKED</div>
+                                    <span id="door-action-indicator" class="hidden">State: LOCKED & ENGAGED</span>
+                                </div>
+
+                                <!-- Interactive Touch Hotspot over Fingerprint Ring -->
+                                <div class="gold-fp-ring-interactive" id="lock-ring-led" title="Touch Fingerprint Scanner to Verify Biometrics">
+                                    <div class="lock-bolt-mechanism hidden" id="lock-bolt"></div>
+                                    <div class="fp-pulse-glow"></div>
+                                </div>
+
+                                <!-- Vertical Handle Hotspot -->
+                                <div class="vertical-gold-handle-hotspot" id="door-handle"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sleek Bottom Door Control Bar -->
+                        <div class="door-controls-row">
+                            <button id="btn-direct-unlock" class="btn btn-gold-action">🔓 UNLOCK</button>
+                            <button id="btn-direct-open" class="btn btn-slate-action" disabled>🚪 OPEN</button>
+                            <button id="btn-direct-close" class="btn btn-slate-action" disabled>🚪 CLOSE</button>
+                            <button id="btn-direct-lock" class="btn btn-slate-action" disabled>🔒 LOCK</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BREADCRUMB INDICATOR HEADER -->
+            <div class="breadcrumb-strip">
+                <span class="breadcrumb-icon" id="module-icon">📊</span>
+                <div>
+                    <h2 class="module-title-heading" id="module-title-heading">Features Overview</h2>
+                    <span class="module-subtext" id="module-subtext">Real-time smart security door status and visual controls</span>
+                </div>
+            </div>
+
+            <!-- MODULE VIEWS CONTAINER -->
+            <div class="module-views-container">
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 1: DASHBOARD OVERVIEW VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-dashboard" class="module-view active">
+
+                    <!-- DASHBOARD MAIN GRID -->
+                    <div class="dashboard-main-grid">
+
+                        <!-- RIGHT: QUICK SUMMARY & RECENT FEED -->
+                        <div class="dashboard-side-column">
+                            <!-- METRICS QUICK CARDS -->
+                            <div class="control-box stats-box">
+                                <div class="panel-header">
+                                    <h2><span class="icon-heading">📊</span> SECURITY METRICS</h2>
+                                </div>
+
+                                <div class="stats-cards-grid">
+                                    <div class="stat-card stat-total">
+                                        <div class="stat-card-header">
+                                            <span class="stat-badge-icon gold">🎯</span>
+                                            <span class="stat-lbl">TOTAL ATTEMPTS</span>
+                                        </div>
+                                        <span class="stat-num" id="stat-total-attempts">0</span>
+                                    </div>
+                                    <div class="stat-card stat-success">
+                                        <div class="stat-card-header">
+                                            <span class="stat-badge-icon green">✅</span>
+                                            <span class="stat-lbl">SUCCESSFUL ACCESS</span>
+                                        </div>
+                                        <span class="stat-num" id="stat-successful-access">0</span>
+                                    </div>
+                                    <div class="stat-card stat-failed">
+                                        <div class="stat-card-header">
+                                            <span class="stat-badge-icon red">❌</span>
+                                            <span class="stat-lbl">FAILED ACCESS</span>
+                                        </div>
+                                        <span class="stat-num" id="stat-failed-attempts">0</span>
+                                    </div>
+                                    <div class="stat-card stat-events">
+                                        <div class="stat-card-header">
+                                            <span class="stat-badge-icon blue">⚡</span>
+                                            <span class="stat-lbl">SECURITY EVENTS</span>
+                                        </div>
+                                        <span class="stat-num" id="stat-security-events">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RECENT ACTIVITY FEED -->
+                            <div class="control-box recent-box">
+                                <div class="panel-header">
+                                    <h2><span class="icon-heading">⚡</span> RECENT ACTIVITY</h2>
+                                    <span class="subtext">Latest security events for user</span>
+                                </div>
+
+                                <div id="recent-activity-list" class="recent-activity-list">
+                                    <!-- Dynamically populated by JS API call -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 2: ACCESS METHODS CENTER VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-access-methods" class="module-view">
+                    
+                    <section class="panel access-panel">
+                        <div class="panel-header">
+                            <h2><span class="icon-heading">🔑</span> MULTI-FACTOR ACCESS CONTROL CENTER</h2>
+                            <span class="subtext">Select an authentication modality to simulate smart door access</span>
+                        </div>
+
+                        <!-- Access Method Selector Tabs -->
+                        <div class="tab-menu" role="tablist">
+                            <button class="tab-btn active" data-tab="pin-tab">
+                                <span class="tab-icon">🔢</span>
+                                <span class="tab-label">PIN Access</span>
+                            </button>
+                            <button class="tab-btn" data-tab="fingerprint-tab">
+                                <span class="tab-icon">👆</span>
+                                <span class="tab-label">Fingerprint Biometrics</span>
+                            </button>
+                            <button class="tab-btn" data-tab="rfid-tab">
+                                <span class="tab-icon">🪪</span>
+                                <span class="tab-label">RFID Card Pass</span>
+                            </button>
+                            <button class="tab-btn" data-tab="mobile-tab">
+                                <span class="tab-icon">📱</span>
+                                <span class="tab-label">Mobile App Remote</span>
+                            </button>
+                            <button class="tab-btn" data-tab="voice-tab">
+                                <span class="tab-icon">🎙️</span>
+                                <span class="tab-label">Voice Command</span>
+                            </button>
+                        </div>
+
+                        <div class="tab-content-container">
+
+                            <!-- TAB 1: PIN ACCESS KEYPAD -->
+                            <div id="pin-tab" class="tab-pane active">
+                                <div class="pin-wrapper">
+                                    
+                                    <!-- Visual Masked PIN Display -->
+                                    <div class="pin-masked-box" id="pin-masked-box">
+                                        <span class="pin-dot"></span>
+                                        <span class="pin-dot"></span>
+                                        <span class="pin-dot"></span>
+                                        <span class="pin-dot"></span>
+                                    </div>
+
+                                    <div class="pin-state-badge" id="pin-state-badge">ENTER PIN</div>
+
+                                    <!-- On-Screen Keypad -->
+                                    <div class="keypad">
+                                        <button class="key-btn" data-val="1">1</button>
+                                        <button class="key-btn" data-val="2">2</button>
+                                        <button class="key-btn" data-val="3">3</button>
+                                        <button class="key-btn" data-val="4">4</button>
+                                        <button class="key-btn" data-val="5">5</button>
+                                        <button class="key-btn" data-val="6">6</button>
+                                        <button class="key-btn" data-val="7">7</button>
+                                        <button class="key-btn" data-val="8">8</button>
+                                        <button class="key-btn" data-val="9">9</button>
+                                        <button class="key-btn key-clear" id="btn-pin-backspace" title="Backspace">←</button>
+                                        <button class="key-btn" data-val="0">0</button>
+                                        <button class="key-btn key-enter" id="btn-pin-submit" title="Verify PIN">✓</button>
+                                    </div>
+
+                                    <div class="pin-sub-actions">
+                                        <button type="button" id="btn-pin-clear" class="btn-link-sm">Clear All</button>
+                                        <button type="button" id="btn-open-pin-modal" class="btn-link-sm">⚙️ Manage / Change PIN</button>
+                                    </div>
+
+                                    <p class="hint-text">💡 Keypad or physical keyboard input supported. Demo PIN: <strong>1234</strong></p>
+                                </div>
+                            </div>
+
+                            <!-- TAB 2: FINGERPRINT SCANNER -->
+                            <div id="fingerprint-tab" class="tab-pane">
+                                <div class="fingerprint-wrapper">
+                                    <div class="fp-scanner-zone" id="fp-scanner">
+                                        <div class="fp-laser-line"></div>
+                                        <svg class="fp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 12a3 3 0 0 0-3 3c0 2.98 0 5.96 0 8.94"/>
+                                            <path d="M12 9a6 6 0 0 0-6 6c0 1.83 0 3.66 0 5.49"/>
+                                            <path d="M12 6a9 9 0 0 0-9 9c0 .71 0 1.42 0 2.12"/>
+                                            <path d="M12 3a12 12 0 0 0-12 12"/>
+                                            <path d="M12 12a3 3 0 0 1 3 3c0 2.98 0 5.96 0 8.94"/>
+                                            <path d="M12 9a6 6 0 0 1 6 6c0 1.83 0 3.66 0 5.49"/>
+                                            <path d="M12 6a9 9 0 0 1 9 9c0 .71 0 1.42 0 2.12"/>
+                                            <path d="M12 3a12 12 0 0 1 12 12"/>
+                                        </svg>
+                                    </div>
+                                    <span class="fp-status-label" id="fp-status-label">PRESS & HOLD TO SCAN</span>
+
+                                    <div class="fp-simulation-options">
+                                        <label class="radio-label">
+                                            <input type="radio" name="fp-user" value="authorized" checked>
+                                            <span>Registered User (Authorized Biometric)</span>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="fp-user" value="unauthorized">
+                                            <span>Unregistered Print (Unknown)</span>
+                                        </label>
+                                        <button id="btn-trigger-fp-scan" class="btn btn-primary full-width">SIMULATE FINGERPRINT SCAN</button>
+                                        <p class="hint-text" style="text-align: center; margin-top: 10px;">💡 <em>Software Simulation: The browser does not connect to a physical biometric reader.</em></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3: RFID CARD -->
+                            <div id="rfid-tab" class="tab-pane">
+                                <div class="rfid-wrapper">
+                                    <div class="rfid-reader-target" id="rfid-reader">
+                                        <div class="rfid-wave-ring"></div>
+                                        <div class="rfid-sensor-header">
+                                            <div class="rfid-nfc-icon-wrapper">
+                                                <svg class="rfid-nfc-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="2" y="5" width="20" height="14" rx="2.5"/>
+                                                    <line x1="2" y1="10" x2="22" y2="10"/>
+                                                    <path d="M16 15h.01"/>
+                                                    <path d="M19 15h.01"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <span class="rfid-target-text" id="rfid-target-text">TAP OR DROP RFID CARD HERE</span>
+                                        <span class="rfid-sensor-badge">NFC / RFID CONTACTLESS STAGE</span>
+                                    </div>
+
+                                    <div class="rfid-cards-deck">
+                                        <div class="rfid-card admin-card" draggable="true" id="rfid-admin" data-card-id="CARD-8942-ADMIN">
+                                            <div class="card-chip-row">
+                                                <div class="emv-chip-gold"></div>
+                                                <span class="card-nfc-symbol">📡</span>
+                                            </div>
+                                            <div class="card-info-block">
+                                                <div class="card-title">ADMIN PASS</div>
+                                                <div class="card-id">#CARD-8942-ADMIN</div>
+                                            </div>
+                                            <button class="btn-tap-card">Tap Card</button>
+                                        </div>
+
+                                        <div class="rfid-card guest-card" draggable="true" id="rfid-guest" data-card-id="CARD-1102-GUEST">
+                                            <div class="card-chip-row">
+                                                <div class="emv-chip-gold"></div>
+                                                <span class="card-nfc-symbol">📡</span>
+                                            </div>
+                                            <div class="card-info-block">
+                                                <div class="card-title">GUEST PASS</div>
+                                                <div class="card-id">#CARD-1102-GUEST</div>
+                                            </div>
+                                            <button class="btn-tap-card">Tap Card</button>
+                                        </div>
+
+                                        <div class="rfid-card invalid-card" draggable="true" id="rfid-invalid" data-card-id="CARD-9999-BLOCKED">
+                                            <div class="card-chip-row">
+                                                <div class="emv-chip-gold revoked"></div>
+                                                <span class="card-status-tag red">REVOKED</span>
+                                            </div>
+                                            <div class="card-info-block">
+                                                <div class="card-title">EXPIRED CARD</div>
+                                                <div class="card-id">#CARD-9999-REVOKED</div>
+                                            </div>
+                                            <button class="btn-tap-card">Tap Card</button>
+                                        </div>
+                                    </div>
+
+                                    <div style="text-align: center; margin-top: 6px;">
+                                        <button type="button" id="btn-open-rfid-modal" class="btn-link-sm">⚙️ Manage Authorized RFID Passes</button>
+                                        <p class="hint-text" style="margin-top: 8px;">💡 <em>Software Simulation: Simulated smart card tap and drag-and-drop reader stage.</em></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 4: MOBILE APP SIMULATION -->
+                            <div id="mobile-tab" class="tab-pane">
+                                <div class="mobile-tab-preview">
+                                    <div class="mobile-screen-mockup">
+                                        <div class="phone-notch"></div>
+                                        <div class="phone-content">
+                                            <div class="app-header-mini">
+                                                <span>🛡️ GUARDIA REMOTE</span>
+                                                <span class="phone-battery">🔋 98%</span>
+                                            </div>
+
+                                            <div class="phone-title-block">
+                                                <div class="phone-app-name">GUARDIA SMART LOCK</div>
+                                                <div class="phone-door-name">Main Entrance Door</div>
+                                            </div>
+
+                                            <div class="phone-status-box">
+                                                <div class="app-status-badge" id="app-status-badge">🔒 LOCKED</div>
+                                                <div class="phone-status-details">
+                                                    <div class="phone-detail-item"><span>Security:</span> <strong id="app-sec-mode">NORMAL</strong></div>
+                                                    <div class="phone-detail-item"><span>Power:</span> <strong id="app-power-source">MAIN POWER</strong></div>
+                                                    <div class="phone-detail-item"><span>Alarm:</span> <strong id="app-alarm-state">OFF</strong></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="app-quick-actions">
+                                                <div class="app-btn-row">
+                                                    <button id="app-btn-unlock" class="btn btn-app-unlock">🔓 UNLOCK</button>
+                                                    <button id="app-btn-open" class="btn btn-app-open">🚪 OPEN</button>
+                                                </div>
+                                                <div class="app-btn-row">
+                                                    <button id="app-btn-close" class="btn btn-app-close">🚪 CLOSE</button>
+                                                    <button id="app-btn-lock" class="btn btn-app-lock">🔒 LOCK</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="phone-footer-status">
+                                                <div class="phone-connection">
+                                                    <span class="status-dot green" id="app-connection-dot"></span>
+                                                    <span id="app-connection-text">CONNECTED</span>
+                                                </div>
+                                                <div class="phone-last-sync" id="app-last-sync">Last synced: Just now</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 5: VOICE COMMAND -->
+                            <div id="voice-tab" class="tab-pane">
+                                <div class="voice-card">
+                                    <div class="voice-card-header">
+                                        <div class="voice-header-icon">🎙️</div>
+                                        <div>
+                                            <h3 class="voice-card-title">VOICE COMMAND SYSTEM</h3>
+                                            <p class="voice-card-subtitle">Control your GUARDIA door using voice recognition</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Animated Microphone Listening Stage -->
+                                    <div class="voice-stage" id="voice-stage">
+                                        <div class="voice-mic-outer-ring" id="voice-mic-outer">
+                                            <div class="voice-mic-circle-btn" id="voice-mic-btn" title="Toggle Voice Recognition">
+                                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Soundwave Animation Bars -->
+                                        <div class="soundwave-anim hidden" id="soundwave-anim">
+                                            <span></span><span></span><span></span><span></span><span></span>
+                                        </div>
+
+                                        <!-- Recognized Speech Transcript Box -->
+                                        <div class="voice-transcript-box">
+                                            <span class="transcript-label">Recognized command:</span>
+                                            <div class="transcript-text" id="voice-transcript-text">"Press 'Start Listening' or simulate command"</div>
+                                        </div>
+
+                                        <!-- Live Status Badge -->
+                                        <div class="voice-status-badge ready" id="voice-status-badge">READY</div>
+                                        
+                                        <!-- Feedback & Explanation Text -->
+                                        <div class="voice-feedback-text" id="voice-feedback-text">Click 'Start Listening' to speak or select a command below.</div>
+                                    </div>
+
+                                    <!-- Confirmation Prompt Banner for Sensitive Voice Actions -->
+                                    <div id="voice-confirm-banner" class="voice-confirm-banner hidden">
+                                        <div class="confirm-text" id="voice-confirm-question">Confirm voice action: "Unlock door"?</div>
+                                        <div class="confirm-buttons">
+                                            <button type="button" id="btn-voice-confirm-yes" class="btn btn-primary">✓ CONFIRM</button>
+                                            <button type="button" id="btn-voice-confirm-no" class="btn btn-secondary">✕ CANCEL</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="voice-actions-group">
+                                        <button type="button" id="btn-voice-toggle" class="btn btn-primary full-width">
+                                            <span class="mic-icon">🎙️</span> <span id="btn-voice-toggle-text">START LISTENING</span>
+                                        </button>
+                                        
+                                        <button type="button" id="btn-open-voice-modal" class="btn btn-secondary full-width">
+                                            💬 Simulate Voice Command
+                                        </button>
+                                    </div>
+
+                                    <!-- Browser Compatibility Warning (Shown if Speech API is unsupported) -->
+                                    <div id="voice-unsupported-alert" class="voice-unsupported-alert hidden">
+                                        ⚠️ Voice recognition is not supported in this browser. Use the <strong>Simulate Voice Command</strong> button above to test.
+                                    </div>
+
+                                    <!-- Supported Commands Chips -->
+                                    <div class="supported-commands-box">
+                                        <span class="supported-title">💡 Supported Voice Commands:</span>
+                                        <div class="command-chips">
+                                            <button type="button" class="cmd-chip" data-cmd="unlock door">"Unlock door"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="lock door">"Lock door"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="open door">"Open door"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="close door">"Close door"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="activate alarm">"Activate alarm"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="deactivate alarm">"Deactivate alarm"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="enable privacy mode">"Enable privacy mode"</button>
+                                            <button type="button" class="cmd-chip" data-cmd="disable privacy mode">"Disable privacy mode"</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 3: SECURITY & SAFETY CONTROLS VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-security-controls" class="module-view">
+                    
+                    <section class="panel security-controls-panel">
+                        <div class="panel-header">
+                            <h2><span class="icon-heading">🛡️</span> SYSTEM SECURITY & SAFETY HUB</h2>
+                            <span class="subtext">Manage alarm triggers, emergency lockdown, privacy mode, and power backup</span>
+                        </div>
+
+                        <div class="control-switches-grid">
+                            
+                            <!-- 1. Alarm Control Card -->
+                            <div class="switch-card" id="card-alarm">
+                                <div class="switch-header">
+                                    <span class="switch-title">🚨 SECURITY ALARM</span>
+                                    <span class="badge-status-pill off" id="alarm-status-badge">● ALARM OFF</span>
+                                </div>
+                                <p class="switch-desc">Monitors unauthorized access attempts and triggers high-decibel siren on 5-strike failure.</p>
+                                <div class="switch-btn-group">
+                                    <button id="btn-activate-alarm" class="btn btn-danger full-width">ACTIVATE ALARM</button>
+                                    <button id="btn-deactivate-alarm" class="btn btn-secondary full-width hidden">DEACTIVATE ALARM</button>
+                                </div>
+                            </div>
+
+                            <!-- 2. Emergency Mode Card -->
+                            <div class="switch-card" id="card-emergency">
+                                <div class="switch-header">
+                                    <span class="switch-title">🆘 EMERGENCY MODE</span>
+                                    <span class="badge-status-pill normal" id="emergency-status-badge">● NORMAL</span>
+                                </div>
+                                <p class="switch-desc">Immediately seals main door locked, activates siren, and overrides privacy mode settings.</p>
+                                <div class="switch-btn-group">
+                                    <button id="btn-activate-emergency" class="btn btn-danger full-width">ACTIVATE EMERGENCY</button>
+                                    <button id="btn-exit-emergency" class="btn btn-primary full-width hidden">EXIT EMERGENCY MODE</button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Privacy Mode Card -->
+                            <div class="switch-card" id="card-privacy">
+                                <div class="switch-header">
+                                    <span class="switch-title">🔒 PRIVACY MODE</span>
+                                    <span class="badge-status-pill off" id="privacy-status-badge">● PRIVACY OFF</span>
+                                </div>
+                                <p class="switch-desc">Blocks remote mobile app and voice command unlock requests (HTTP 403 Forbidden).</p>
+                                <div class="switch-btn-group">
+                                    <button id="btn-enable-privacy" class="btn btn-warning full-width">ENABLE PRIVACY</button>
+                                    <button id="btn-disable-privacy" class="btn btn-secondary full-width hidden">DISABLE PRIVACY</button>
+                                </div>
+                            </div>
+
+                            <!-- 4. Power Source Card -->
+                            <div class="switch-card" id="card-power">
+                                <div class="switch-header">
+                                    <span class="switch-title">🔋 POWER SYSTEM</span>
+                                    <span class="badge-status-pill main" id="power-status-badge">MAIN POWER</span>
+                                </div>
+                                <p class="switch-desc">Simulates main AC utility grid failure and seamless switchover to battery backup.</p>
+                                <div class="switch-btn-group">
+                                    <button id="btn-simulate-power-fail" class="btn btn-warning full-width">SIMULATE POWER FAILURE</button>
+                                    <button id="btn-restore-power" class="btn btn-primary full-width hidden">RESTORE MAIN POWER</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 4: AUDIT HISTORY & LOGS VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-history" class="module-view">
+                    
+                    <section class="panel history-panel" id="section-access-history">
+                        <div class="history-header">
+                            <div class="history-title-group">
+                                <h2><span class="icon-heading">📜</span> ACCESS HISTORY & SYSTEM AUDIT LOGS</h2>
+                                <span class="subtext">Real-time audit records stored in MySQL <code style="color:var(--primary-gold)">access_logs</code> table</span>
+                            </div>
+
+                            <div class="history-actions">
+                                <button id="btn-export-csv" class="btn btn-secondary">📥 Export CSV</button>
+                                <button id="btn-clear-history" class="btn btn-danger-outline">🗑️ Clear History</button>
+                            </div>
+                        </div>
+
+                        <!-- Advanced History Filter Bar -->
+                        <div class="history-filter-bar">
+                            <div class="filter-group">
+                                <label for="filter-method">Method:</label>
+                                <select id="filter-method" class="filter-select">
+                                    <option value="all">All Methods</option>
+                                    <option value="PIN">PIN Access</option>
+                                    <option value="Fingerprint">Fingerprint</option>
+                                    <option value="RFID">RFID Card</option>
+                                    <option value="Mobile">Mobile App</option>
+                                    <option value="Voice">Voice Command</option>
+                                    <option value="System">System Alerts</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="filter-status">Status:</label>
+                                <select id="filter-status" class="filter-select">
+                                    <option value="all">All Statuses</option>
+                                    <option value="granted">Success (Granted)</option>
+                                    <option value="denied">Failed (Denied)</option>
+                                    <option value="system">Alert (System)</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label for="filter-date">Date:</label>
+                                <select id="filter-date" class="filter-select">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="7days">Last 7 Days</option>
+                                    <option value="30days">Last 30 Days</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-btn-group">
+                                <button id="btn-apply-filters" class="btn btn-primary">Apply Filters</button>
+                                <button id="btn-reset-filters" class="btn btn-secondary">Clear Filters</button>
+                            </div>
+                        </div>
+
+                        <div class="history-table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>TIME</th>
+                                        <th>ACCESS METHOD</th>
+                                        <th>STATUS</th>
+                                        <th>DESCRIPTION / DETAILS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Dynamic Rows Injected by JS API calls -->
+                                </tbody>
+                            </table>
+                            <div id="no-logs-msg" class="no-logs-msg hidden">No access activity recorded matching selected filters.</div>
+                        </div>
+
+                        <!-- History Pagination Footer Bar -->
+                        <div class="pagination-bar">
+                            <span id="pagination-info" class="pagination-info">Showing 1–10 of 0</span>
+                            <div class="pagination-controls">
+                                <button id="btn-page-prev" class="btn-page" disabled>Previous</button>
+                                <div id="pagination-pages" class="pagination-pages"></div>
+                                <button id="btn-page-next" class="btn-page" disabled>Next</button>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 5: CONTACT US & SUPPORT HUB VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-contact" class="module-view">
+                    
+                    <!-- SECTION 1: CONTACT US FORM & SUPPORT HUB -->
+                    <section class="panel contact-panel">
+                        <div class="panel-header">
+                            <h2><span class="icon-heading">📧</span> CONTACT US & SUPPORT HUB</h2>
+                            <span class="subtext">Reach out to our GUARDIA security engineering team or submit a custom door inquiry</span>
+                        </div>
+
+                        <div class="contact-grid">
+                            <!-- Contact Form -->
+                            <form id="form-contact-us" class="contact-form">
+                                <div class="form-row-2col">
+                                    <div class="form-group">
+                                        <label for="contact-name">Full Name</label>
+                                        <input type="text" id="contact-name" class="form-input" placeholder="Your Full Name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contact-email">Email Address</label>
+                                        <input type="email" id="contact-email" class="form-input" placeholder="name@example.com" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="contact-subject">Inquiry Subject</label>
+                                    <select id="contact-subject" class="form-input">
+                                        <option value="General Inquiry">General Inquiry</option>
+                                        <option value="Custom Smart Door Quote">Custom Smart Door Quote & Pricing</option>
+                                        <option value="Technical Support">Technical Support & Firmware</option>
+                                        <option value="Emergency Service">Emergency Security Service</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="contact-message">Message</label>
+                                    <textarea id="contact-message" class="form-input" rows="4" placeholder="How can our security team assist you?" required></textarea>
+                                </div>
+
+                                <button type="submit" id="btn-submit-contact" class="btn btn-primary full-width">📨 SEND INQUIRY MESSAGE</button>
+                            </form>
+
+                            <!-- Support Info Card -->
+                            <div class="contact-info-card">
+                                <h3>🛡️ GUARDIA SECURITY HEADQUARTERS</h3>
+                                <p class="contact-info-desc">Our dedicated security specialists are available 24/7 for custom installations, enterprise sales, and rapid response support.</p>
+                                
+                                <div class="contact-info-list">
+                                    <div class="info-item">
+                                        <span class="info-icon">📞</span>
+                                        <div>
+                                            <strong>24/7 Security Hotline</strong>
+                                            <div class="info-val">+1 (800) 555-GUARDIA</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-icon">✉️</span>
+                                        <div>
+                                            <strong>Direct Support Email</strong>
+                                            <div class="info-val">support@guardiasecurity.com</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-icon">🏢</span>
+                                        <div>
+                                            <strong>Global Headquarters</strong>
+                                            <div class="info-val">100 Cybernetic Plaza, Suite 500, Tech City</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-icon">⚡</span>
+                                        <div>
+                                            <strong>Emergency Response Guarantee</strong>
+                                            <div class="info-val">&lt; 15 Minutes Response Time</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ========================================================================== -->
+                <!-- MODULE 5: CREDENTIALS & SETTINGS VIEW -->
+                <!-- ========================================================================== -->
+                <div id="view-settings" class="module-view">
+                    
+                    <section class="panel settings-panel">
+                        <div class="panel-header">
+                            <h2><span class="icon-heading">⚙️</span> USER CREDENTIALS & SYSTEM SETTINGS</h2>
+                            <span class="subtext">Manage security PINs, authorized RFID cards, and user session details</span>
+                        </div>
+
+                        <div class="settings-grid">
+                            
+                            <!-- Card 1: PIN Management -->
+                            <div class="setting-card">
+                                <div class="setting-icon">🔑</div>
+                                <div class="setting-info">
+                                    <h3>Security PIN Credential</h3>
+                                    <p>Update your 4 or 6 digit keypad authentication PIN stored safely with salted bcrypt hashing.</p>
+                                </div>
+                                <button id="btn-setting-manage-pin" class="btn btn-primary">⚙️ Change Security PIN</button>
+                            </div>
+
+                            <!-- Card 2: RFID Cards Management -->
+                            <div class="setting-card">
+                                <div class="setting-icon">🪪</div>
+                                <div class="setting-info">
+                                    <h3>Authorized RFID Passes</h3>
+                                    <p>Register new simulated RFID cards or revoke existing access passes from database.</p>
+                                </div>
+                                <button id="btn-setting-manage-rfid" class="btn btn-primary">🪪 Manage RFID Cards</button>
+                            </div>
+
+                            <!-- Card 3: Account Profile Information -->
+                            <div class="setting-card">
+                                <div class="setting-icon">👤</div>
+                                <div class="setting-info">
+                                    <h3>User Account Profile</h3>
+                                    <p>Authenticated Session User ID and isolated door profile configuration.</p>
+                                    <div class="account-details-box" style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                        <div>User: <strong id="settings-user-name" style="color: var(--text-main);">User</strong></div>
+                                        <div>Email: <strong id="settings-user-email" style="color: var(--primary-gold);">email@example.com</strong></div>
+                                        <div>Isolation Status: <strong style="color: var(--emerald-green);">100% Isolated Database Door</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <footer class="main-footer">
+                <p>GUARDIA Smart Security System Simulation &copy; 2026 — Gold Edition Cybersecurity College Project</p>
+                <p class="footer-tech">Frontend: HTML5 / CSS3 / Vanilla JS • Backend: Node.js / Express.js REST API • Database: MySQL</p>
+            </footer>
+
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/script.js"></script>
+</body>
+</html>
