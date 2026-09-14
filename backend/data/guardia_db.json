@@ -1,0 +1,83 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alex Mercer",
+      "email": "alex@guardia.com",
+      "password_hash": "$2a$10$BdgM0mcsuIJSEr52yoUhqedSqGVm/O5J/s0GeBxyoJ/KZytUuwkpG",
+      "pin_code": "1234",
+      "created_at": "2026-09-14T22:15:04.663Z"
+    },
+    {
+      "id": 2,
+      "name": "Alex Mercer",
+      "email": "alex@example.com",
+      "password_hash": "$2a$10$BdgM0mcsuIJSEr52yoUhqedSqGVm/O5J/s0GeBxyoJ/KZytUuwkpG",
+      "pin_code": "1234",
+      "created_at": "2026-09-14T22:15:04.664Z"
+    },
+    {
+      "id": 3,
+      "name": "Test User",
+      "email": "testuser@guardia.com",
+      "password_hash": "$2a$10$PQ9gVOgADEnJQsqmINeW0.k8ORzkuzcs8sk2tYtWZT2tXMOOyQxNO",
+      "pin_code": "1234",
+      "created_at": "2026-09-14T22:15:11.239Z"
+    }
+  ],
+  "doors": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "door_name": "Alex's Smart Door",
+      "status": "LOCKED",
+      "security_mode": "NORMAL",
+      "power_status": "AC",
+      "battery_level": 100,
+      "alarm_status": 0,
+      "created_at": "2026-09-14T22:15:04.664Z",
+      "updated_at": "2026-09-14T22:15:04.664Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "door_name": "Alex's Smart Door",
+      "status": "LOCKED",
+      "security_mode": "NORMAL",
+      "power_status": "AC",
+      "battery_level": 100,
+      "alarm_status": 0,
+      "created_at": "2026-09-14T22:15:04.664Z",
+      "updated_at": "2026-09-14T22:15:04.664Z"
+    }
+  ],
+  "access_credentials": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "door_id": 1,
+      "method": "PIN",
+      "credential_hash": "$2a$10$YajwKG2AmI4TleUAuHF9Hesl6BY56j91hJDkL5g49Q0i0QfDtxHOi",
+      "created_at": "2026-09-14T22:15:04.664Z"
+    },
+    {
+      "id": 2,
+      "user_id": 2,
+      "door_id": 2,
+      "method": "PIN",
+      "credential_hash": "$2a$10$YajwKG2AmI4TleUAuHF9Hesl6BY56j91hJDkL5g49Q0i0QfDtxHOi",
+      "created_at": "2026-09-14T22:15:04.664Z"
+    }
+  ],
+  "access_logs": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "door_id": 1,
+      "access_method": "System Init",
+      "status": "system",
+      "description": "GUARDIA Database & User Account Online",
+      "timestamp": "2026-09-14T22:15:04.664Z"
+    }
+  ]
+}
