@@ -56,6 +56,8 @@ exports.register = async (req, res) => {
             [userId, `${cleanName}'s Smart Door`, 'LOCKED', 'NORMAL', 'AC', 100, 0]
         );
 
+        const doorId = doorResult.insertId;
+
         // Initial PIN credential
         const defaultPinHash = await bcrypt.hash('1234', 10);
         await db.execute(
