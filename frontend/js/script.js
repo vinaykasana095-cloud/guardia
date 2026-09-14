@@ -8,9 +8,16 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000' && window.location.port !== '')
-        ? 'http://localhost:5000/api'
-        : '/api';
+    let API_BASE = '/api';
+    if (window.location.protocol === 'file:') {
+        API_BASE = 'http://localhost:5000/api';
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (window.location.port !== '5000') {
+            API_BASE = 'http://localhost:5000/api';
+        } else {
+            API_BASE = '/api';
+        }
+    }
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // ==========================================================================
