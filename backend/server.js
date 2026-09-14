@@ -40,9 +40,18 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'GUARDIA Backend Server Active', timestamp: new Date() });
 });
 
+// Serve static frontend assets
+app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '..')));
+
 // Fallback 404 handler for API
 app.use('/api/*', (req, res) => {
     res.status(404).json({ success: false, message: 'API Endpoint Not Found' });
+});
+
+// Root / Frontend catch-all route
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Global Error Handling Middleware

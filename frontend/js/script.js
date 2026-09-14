@@ -8,7 +8,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    const API_BASE = 'http://localhost:5000/api';
+    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000' && window.location.port !== '')
+        ? 'http://localhost:5000/api'
+        : '/api';
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     // ==========================================================================

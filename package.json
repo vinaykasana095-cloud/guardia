@@ -1,0 +1,19 @@
+﻿{
+  "name": "guardia",
+  "version": "1.0.0",
+  "description": "GUARDIA - Smart Door Access & Security Control System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "install:backend": "npm --prefix backend install",
+    "postinstall": "npm --prefix backend install"
+  },
+  "keywords": [
+    "security",
+    "smart-door",
+    "iot",
+    "access-control"
+  ],
+  "author": "vinaykasana095-cloud",
+  "license": "MIT"
+}
