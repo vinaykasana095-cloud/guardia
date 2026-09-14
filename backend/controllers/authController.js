@@ -56,13 +56,20 @@ exports.register = async (req, res) => {
             [userId, `${cleanName}'s Smart Door`, 'LOCKED', 'NORMAL', 'AC', 100, 0]
         );
 
-        const doorId = doorResult.insertId;
+        // Initial PIN credential
+        const defaultPinHash = await bcrypt.hash('1234', 10);
+        await db.execute(
+            'INSERT INTO access_credentials (user_id, door_id, method, credential_hash) VALUES (?, ?, ?, ?)',
+            [userId, doorId, 'PIN', defaultPinHash]
+        );
 
         // Initial system audit log
         await db.execute(
             'INSERT INTO access_logs (user_id, door_id, access_method, status, description) VALUES (?, ?, ?, ?, ?)',
             [userId, doorId, 'System Init', 'system', `Account registered & Smart Door initialized for ${cleanName}`]
         );
+
+        console.log(`✅ User registered successfully in database: ${cleanEmail} (ID: ${userId})`);
 
         // Generate 24h JWT token
         const token = jwt.sign({ userId, email: cleanEmail, name: cleanName }, JWT_SECRET, { expiresIn: '24h' });
@@ -90,6 +97,7 @@ exports.login = async (req, res) => {
         }
 
         const cleanEmail = email.trim().toLowerCase();
+        console.log(`🔐 Login attempt for: ${cleanEmail}`);
 
         // Parameterized Query to prevent SQL Injection
         const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [cleanEmail]);
@@ -98,6 +106,7 @@ exports.login = async (req, res) => {
         const GENERIC_AUTH_ERROR = 'Invalid email or password.';
 
         if (users.length === 0) {
+            console.warn(`❌ Login failed: User '${cleanEmail}' not found in database.`);
             return res.status(401).json({ success: false, message: GENERIC_AUTH_ERROR });
         }
 
